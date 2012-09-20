@@ -1,0 +1,23 @@
+{
+  "name": "dank-queue",
+  "version": "0.1.0",
+  "description": "A versatile async flow control module",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/wankdanker/node-dank-queue.git"
+  },
+  "keywords": [
+    "async",
+    "flow",
+    "control"
+  ],
+  "author": "Dan VerWeire",
+  "license": "MIT"
+}
