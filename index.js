@@ -24,7 +24,8 @@ function Queue(options) {
 		;
 	
 	self.options = options || {};
-
+	self.options.context = self.options.context || {};
+	
 	self.insertIndex = 0;
 	self.queues = {};
 
@@ -169,12 +170,12 @@ Queue.prototype.next = function (args) {
 				process.nextTick(function () {
 					if (self.listeners('error').length) {
 						try {
-							fn.apply(fn, newArgs);
+							fn.apply(self.options.context, newArgs);
 						} catch (e) {
 							self.emit('error', e);
 						}
 					} else {
-						fn.apply(fn, newArgs);
+						fn.apply(self.options.context, newArgs);
 					}
 					
 					//avoid mem leaks
