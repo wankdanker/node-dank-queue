@@ -116,10 +116,14 @@ Queue.prototype.stop = function () {
 };
 
 Queue.prototype.next = function (args) {
-	var self = this, queueName, queue;
+	var self = this, queueName, queue, emitter;
 	
 	if (!self.runnable) {
 		return false;
+	}
+	
+	if (self.options.context.emit) {
+		emitter = self.options.context;
 	}
 	
 	args = args || [];
@@ -143,8 +147,8 @@ Queue.prototype.next = function (args) {
 	}
 
 	if (!queue.length && !Object.keys(self.queues).length) {
-		if (self.options.context.emit) {
-			self.options.context.emit('end');
+		if (emitter) {
+			emitter.emit('end');
 		}
 		
 		return;
@@ -171,11 +175,11 @@ Queue.prototype.next = function (args) {
 				self.runningCount += 1;
 
 				process.nextTick(function () {
-					if (self.listeners('error').length) {
+					if (emitter && emitter.listeners('error').length) {
 						try {
 							fn.apply(self.options.context, newArgs);
 						} catch (e) {
-							self.emit('error', e);
+							emitter.emit('error', e);
 						}
 					} else {
 						fn.apply(self.options.context, newArgs);
