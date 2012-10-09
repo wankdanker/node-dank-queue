@@ -38,8 +38,90 @@ exports['chainish-named-queues'] = function (test) {
 
 		test.deepEqual(a, [1,1,2,3]);
 		test.done();
+	})();
+};
+
+exports['chainish-set-options-then-add-array-of-functions'] = function (test) {
+	var a = [];
+
+	Queue({ context : a })
+	([
+		function (next) {
+			this.push(1);
+			return next();
+		}
+		, function (next) {
+			this.push(2);
+			return next();
+		}
+		, function (next) {
+			this.push(3);
+			return next();
+		}
+		, function () {
+			test.deepEqual(a, [1,2,3]);
+			test.done();
+		}
+	])();
+};
+
+exports['chainish-passing-args'] = function (test) {
+	var a = [8, 6, 7, 5, 3, 0, 9];
+
+	Queue({ context : [] })
+	([
+		function (next) {
+			return next(a[0], a[1], a[2], a[3]);
+		}
+		, function (w, x, y, z, next) {
+			this.push(w);
+			this.push(x);
+			this.push(y);
+			this.push(z);
+
+			return next(a[4], a[5], a[6]);
+		}
+		, function (w, x, y, next) {
+			this.push(w);
+			this.push(x);
+			this.push(y);
+
+			return next();
+		}
+		, function () {
+			test.deepEqual(a, this);
+			test.done();	
+		}
+	])();
+};
+
+exports['chainish-array-event-emitter'] = function (test) {
+	Queue([
+		function (next) {
+			return next();
+		}
+		, function () {
+			this.emit('hello');
+		}
+	]).on('hello', function () {
+		test.done();
+	})();
+};
+
+exports['chainish-event-emitter'] = function (test) {
+	Queue()
+	(function (next) {
+		this.emit('hello', 'world');
+		return next();
 	})
-	();
+	(function () {
+		this.emit('hi');
+	}).on('hello', function (arg) {
+		test.equal(arg, 'world');
+	}).on('hi', function () {
+		test.done();
+	})();
+	
 };
 
 exports['object-instantiate-add-execute'] = function (test) {
@@ -71,57 +153,68 @@ exports['object-instantiate-add-execute'] = function (test) {
 	
 };
 
-exports['nothing'] = function (test) {
-	return test.done()
+exports['object-event-emitter'] = function (test) {
 	var q = new Queue();
 
-	q.add(function ( next ) {
-		console.log('hello');
-		return next();
+	q.on('hello', function () {
+		test.done();
 	});
 
-	q.add(function ( next ) {
-		console.log('world');
-
-		return next();
-	});
-
-	q.add(function () {
-		console.log('done');
+	q.add(function (next) {
+		this.emit('hello');
 	});
 
 	q.execute();
+};
 
-
-	(new Queue())
-
-	(function ( next ) {
-		setTimeout(function () {
-			
-			console.log('hello 2');
-			
-			return next('world 2');
-			
-		}, 1000);
+exports['chainish-pass-falsy-arg'] = function (test) {
+	Queue()
+	(function (next) {
+		return next(0);
 	})
+	(function (arg, next) {
+		test.equal(arg, 0);
 
-	(function ( world, next ) {
-		setTimeout(function () {
-			
-			console.log(world);
-
-			return next();
-			
-		}, 1000);
-		
-		
+		return next();
 	})
-
 	(function () {
-		
-		console.log('done 2');
-		
-		
+		test.done();
 	})();
 
+};
+
+exports['chainish-concurrency'] = function (test) {
+	var a = [];
+
+	Queue({ jobs : 3 })
+	(function (next) {
+		setTimeout(function () {
+			a.push(3);
+			return next();
+		}, 300);
+	})
+	(function (next) {
+		setTimeout(function () {
+			a.push(2);
+			return next()
+		}, 200);
+	})
+	(function (next) {
+		setTimeout(function () {
+			a.push(1);
+			return next();
+		}, 100);
+	}).on('end', function () {
+		test.deepEqual(a, [1,2,3]);
+		test.done();
+	})();
+};
+
+exports['chainish-emit-end'] = function (test) {
+	Queue()
+	(function (next) {
+		return next();
+	}).on('end', function () {
+		test.done();
+	})();
 };
