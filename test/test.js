@@ -218,3 +218,12 @@ exports['chainish-emit-end'] = function (test) {
 		test.done();
 	})();
 };
+
+exports['chainish-test-error-event'] = function (test) {
+	Queue()
+	(function (next) {
+		throw Error('some error');
+	}).on('error', function (e) {
+		test.done();
+	}) ();
+};
