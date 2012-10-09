@@ -2,10 +2,12 @@
 
 "use strict";
 
-var sys = require('util'),
-	events = require('events');
-
 function Queue(options) {
+	var self = this
+		, x
+		, retFunction
+		;
+		
 	//check if this function is not called as a constructor
 	if (!this || this.constructor.name !== 'Queue') {
 		var q = new Queue(options);
@@ -17,14 +19,7 @@ function Queue(options) {
 		return q;
 	}
 	
-	events.EventEmitter.call(this);
-	var self = this
-		, x
-		, retFunction
-		;
-	
 	self.options = options || {};
-	self.options.context = self.options.context || {};
 	
 	self.insertIndex = 0;
 	self.queues = {};
@@ -43,15 +38,15 @@ function Queue(options) {
 
 		return retFunction;
 	};
-
-	for (x in self) {
-		retFunction[x] = self[x];
-	}
-
+	
+	retFunction.__proto__ = self;
+	self.options.context = self.options.context || retFunction;
+	
 	return retFunction;
 }
 
-sys.inherits(Queue, events.EventEmitter);
+Queue.prototype = new process.EventEmitter();
+Queue.prototype.constructor = Queue;
 
 Queue.prototype.add = function (queueName, fn) {
 	var self = this, queue;
@@ -147,6 +142,14 @@ Queue.prototype.next = function (args) {
 		}
 	}
 
+	if (!queue.length && !Object.keys(self.queues).length) {
+		if (self.options.context.emit) {
+			self.options.context.emit('end');
+		}
+		
+		return;
+	}
+	
 	Queue.doWhile(function (cb) {
 		var fn, newArgs;
 
