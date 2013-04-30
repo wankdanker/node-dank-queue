@@ -1,4 +1,7 @@
 /*jslint node: true, forin: true, maxerr: 50, indent: 4 */
+var events = require('events')
+	, util = require('util')
+	;
 
 "use strict";
 
@@ -7,7 +10,7 @@ function Queue(options) {
 		, x
 		, retFunction
 		;
-		
+	
 	//check if this function is not called as a constructor
 	if (!this || this.constructor.name !== 'Queue') {
 		var q = new Queue(options);
@@ -17,6 +20,9 @@ function Queue(options) {
 		}
 		
 		return q;
+	}
+	else {
+		events.EventEmitter.call(this);
 	}
 	
 	self.options = options || {};
@@ -45,8 +51,7 @@ function Queue(options) {
 	return retFunction;
 }
 
-Queue.prototype = new process.EventEmitter();
-Queue.prototype.constructor = Queue;
+util.inherits(Queue, events.EventEmitter);
 
 Queue.prototype.add = function (queueName, fn) {
 	var self = this, queue;
