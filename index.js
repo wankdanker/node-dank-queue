@@ -25,13 +25,13 @@ function Queue(options) {
 		events.EventEmitter.call(this);
 	}
 	
-	self.options = options || {};
+	self.__options = options || {};
 	
 	self.insertIndex = 0;
 	self.queues = {};
 
 	self.lastQueueName = '';
-	self.maxConcurrentJobs = self.options.maxConcurrentJobs || self.options.jobs || 1;
+	self.maxConcurrentJobs = self.__options.maxConcurrentJobs || self.__options.jobs || 1;
 	self.runningCount = 0;
 	self.runnable = false;
 	
@@ -46,7 +46,7 @@ function Queue(options) {
 	};
 	
 	retFunction.__proto__ = self;
-	self.options.context = self.options.context || retFunction;
+	self.__options.context = self.__options.context || retFunction;
 	
 	return retFunction;
 }
@@ -127,8 +127,8 @@ Queue.prototype.next = function (args) {
 		return false;
 	}
 	
-	if (self.options.context.emit) {
-		emitter = self.options.context;
+	if (self.__options.context.emit) {
+		emitter = self.__options.context;
 	}
 	
 	args = args || [];
@@ -182,12 +182,12 @@ Queue.prototype.next = function (args) {
 				process.nextTick(function () {
 					if (emitter && emitter.listeners('error').length) {
 						try {
-							fn.apply(self.options.context, newArgs);
+							fn.apply(self.__options.context, newArgs);
 						} catch (e) {
 							emitter.emit('error', e);
 						}
 					} else {
-						fn.apply(self.options.context, newArgs);
+						fn.apply(self.__options.context, newArgs);
 					}
 					
 					//avoid mem leaks
