@@ -227,3 +227,39 @@ exports['chainish-test-error-event'] = function (test) {
 		test.done();
 	}) ();
 };
+
+exports['object-multiple-with-error-thrown'] = function (test) {
+	var q = new Queue({ jobs : 3 });
+
+	q.add(function (next) {
+		throw new Error('oops');
+	});
+
+	q.add(function (next) {
+		return next();
+	});
+
+	q.add(function (next) {
+		return next();
+	});
+
+	q.add(function (next) {
+		return next();
+	});
+
+	q.add(function (next) {
+		return next();
+	});
+
+	q.on('error', function () {
+		console.log('error');
+	});
+
+	q.on('end', function () {
+		console.log('end');
+		test.done();
+	});
+
+	q.execute();
+
+};
