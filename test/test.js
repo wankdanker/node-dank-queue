@@ -252,11 +252,10 @@ exports['object-multiple-with-error-thrown'] = function (test) {
 	});
 
 	q.on('error', function () {
-		console.log('error');
+		test.done();
 	});
 
 	q.on('end', function () {
-		console.log('end');
 		test.done();
 	});
 
