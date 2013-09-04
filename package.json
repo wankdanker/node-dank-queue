@@ -1,6 +1,6 @@
 {
   "name": "dank-queue",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "A versatile async flow control module",
   "main": "index.js",
   "directories": {
