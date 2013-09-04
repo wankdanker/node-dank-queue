@@ -41,12 +41,17 @@ function Queue(options) {
 		} else {
 			self.execute();
 		}
-
+		
 		return retFunction;
 	};
 	
 	retFunction.__proto__ = self;
 	self.__options.context = self.__options.context || retFunction;
+	
+	self.cleanup = function () {
+		self = null;
+		retFunction = null;
+	};
 	
 	return retFunction;
 }
@@ -68,6 +73,8 @@ Queue.prototype.add = function (queueName, fn) {
 			
 			self.add(queueName, func);
 		});
+		
+		delete self;
 	}
 	else {
 		queue = self.queues[queueName] = self.queues[queueName] || [];
@@ -156,6 +163,8 @@ Queue.prototype.next = function (args) {
 			emitter.emit('end');
 		}
 		
+		self.cleanup();
+		
 		return;
 	}
 	
@@ -172,6 +181,14 @@ Queue.prototype.next = function (args) {
 					self.runningCount -= 1;
 					queue.ended = (queue.ended || 0) + 1;
 					self.next(Array.prototype.slice.call(arguments));
+					
+					//avoid mem leaks
+					fn = null;
+					newArgs = null;
+					self = null;
+					queue = null;
+					args = null;
+					emitter = null;
 				});
 
 				queue.started = (queue.started || 0) + 1;
@@ -179,7 +196,7 @@ Queue.prototype.next = function (args) {
 				//Increment runningCount BEFORE we execute the function
 				self.runningCount += 1;
 
-				process.nextTick(function () {
+				setImmediate(function () {
 					if (emitter && emitter.listeners('error').length) {
 						try {
 							fn.apply(self.__options.context, newArgs);
@@ -189,10 +206,6 @@ Queue.prototype.next = function (args) {
 					} else {
 						fn.apply(self.__options.context, newArgs);
 					}
-					
-					//avoid mem leaks
-					fn = null;
-					newArgs = null;
 				});
 			}
 
@@ -216,6 +229,10 @@ Queue.doWhile = function (fn, concurrent) {
 		fn(function (cont) {
 			if (cont) {
 				run(fn);
+			}
+			else {
+				fn = null;
+				run = null;
 			}
 		});
 	};
