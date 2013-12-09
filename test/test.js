@@ -183,31 +183,47 @@ exports['chainish-pass-falsy-arg'] = function (test) {
 
 };
 
-exports['chainish-concurrency'] = function (test) {
-	var a = [];
+exports['chainish-callback-too-many-times'] = function (test) {
+	var count = 0;
 
-	Queue({ jobs : 3 })
+	Queue()
 	(function (next) {
-		setTimeout(function () {
-			a.push(3);
-			return next();
-		}, 300);
+		next('hello');
+		return next();
 	})
-	(function (next) {
-		setTimeout(function () {
-			a.push(2);
-			return next()
-		}, 200);
+	(function (arg, next) {
+		count += 1;
+		test.equal(arg, 'hello');
+
+		return next();
 	})
-	(function (next) {
-		setTimeout(function () {
-			a.push(1);
-			return next();
-		}, 100);
-	}).on('end', function () {
-		test.deepEqual(a, [1,2,3]);
+	(function () {
+		test.equal(count, 1);
 		test.done();
-	})();
+	}) ();
+};
+
+exports['chainish-callback-too-many-times-with-error-event'] = function (test) {
+	var count = 0;
+	var error = null;
+
+	Queue()
+	(function (next) {
+		next('hello');
+		return next();
+	})
+	(function (arg, next) {
+		count += 1;
+		test.equal(arg, 'hello');
+
+		return next();
+	}).on('error', function (err) {
+		error = err;
+	}).on('end', function () {
+		test.equal(count, 1);
+		test.ok(error);
+		test.done();
+	}) ();
 };
 
 exports['chainish-emit-end'] = function (test) {
@@ -261,4 +277,32 @@ exports['object-multiple-with-error-thrown'] = function (test) {
 
 	q.execute();
 
+};
+
+exports['chainish-concurrency'] = function (test) {
+	var a = [];
+
+	Queue({ jobs : 3 })
+	(function (next) {
+		setTimeout(function () {
+			a.push(3);
+			return next();
+		}, 300);
+	})
+	(function (next) {
+		setTimeout(function () {
+			a.push(2);
+			return next()
+		}, 200);
+	})
+	(function (next) {
+		setTimeout(function () {
+			a.push(1);
+			return next();
+		}, 100);
+	}).on('end', function () {
+		console.log('end');
+		test.deepEqual(a, [1,2,3]);
+		test.done();
+	}).on('error', console.error) ();
 };
