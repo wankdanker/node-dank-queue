@@ -169,7 +169,7 @@ Queue.prototype.next = function (args) {
 	}
 	
 	Queue.doWhile(function (cb) {
-		var fn, newArgs;
+		var fn, newArgs, called = false;
 
 		if (queue && self.runningCount < self.maxConcurrentJobs && queue.length) {
 			fn = queue.shift();
@@ -178,6 +178,20 @@ Queue.prototype.next = function (args) {
 				newArgs = [].concat(args);
 
 				newArgs.push(function () {
+					if (called) {
+						var error = new Error('dank-queue: callback was called more than once; add `error` event handler to get more details; ignoring callback and continuing.');
+
+						if (emitter && emitter.listeners('error').length) {
+							emitter.emit('error', error);
+						}
+						else {
+							console.error(error);
+						}
+
+						return;
+					}
+
+					called = true;
 					self.runningCount -= 1;
 					queue.ended = (queue.ended || 0) + 1;
 					self.next(Array.prototype.slice.call(arguments));
@@ -188,7 +202,7 @@ Queue.prototype.next = function (args) {
 					self = null;
 					queue = null;
 					args = null;
-					emitter = null;
+					//emitter = null;
 				});
 
 				queue.started = (queue.started || 0) + 1;
