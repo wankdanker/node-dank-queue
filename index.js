@@ -12,7 +12,7 @@ function Queue(options) {
 		;
 	
 	//check if this function is not called as a constructor
-	if (!this || this.constructor.name !== 'Queue') {
+	if (!this || this.constructor.name !== arguments.callee.name) {
 		var q = new Queue(options);
 		
 		if (Array.isArray(options) || typeof(options) === "function") {

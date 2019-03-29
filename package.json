@@ -19,5 +19,8 @@
     "control"
   ],
   "author": "Dan VerWeire",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "nodeunit": "^0.11.3"
+  }
 }
